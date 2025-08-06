@@ -2,6 +2,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 public class GameGraphic extends JPanel implements KeyListener, Runnable {
@@ -62,7 +66,7 @@ public class GameGraphic extends JPanel implements KeyListener, Runnable {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         drawGrid(g);
-        drawSnake(g);
+        drawSnake((Graphics2D) g);
         drawBall(g);
         drawObstacles(g);
         drawHud(g);
@@ -81,15 +85,37 @@ public class GameGraphic extends JPanel implements KeyListener, Runnable {
         }
     }
 
-    private void drawSnake(Graphics g) {
-        java.util.Iterator<Point> it = logic.getSnake().getBody().iterator();
-        if (it.hasNext()) {
-            Point head = it.next();
-            g.drawImage(headImg, head.x * CELL_SIZE, head.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, this);
-        }
-        while (it.hasNext()) {
-            Point p = it.next();
-            g.drawImage(bodyImg, p.x * CELL_SIZE, p.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, this);
+    private void drawSnake(Graphics2D g2d) {
+        List<Point> list = new ArrayList<>(logic.getSnake().getBody());
+        if (list.isEmpty()) return;
+        Point head = list.get(0);
+        double hcX = head.x * CELL_SIZE + CELL_SIZE / 2.0;
+        double hcY = head.y * CELL_SIZE + CELL_SIZE / 2.0;
+        double hAng = switch (logic.getSnake().getDirection()) {
+            case UP -> -Math.PI / 2;
+            case DOWN -> Math.PI / 2;
+            case LEFT -> Math.PI;
+            default -> 0.0;
+        };
+        AffineTransform old = g2d.getTransform();
+        g2d.rotate(hAng, hcX, hcY);
+        g2d.drawImage(headImg, head.x * CELL_SIZE, head.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, this);
+        g2d.setTransform(old);
+        for (int i = 1; i < list.size(); i++) {
+            Point curr = list.get(i);
+            Point ref = i == list.size() - 1 ? list.get(i - 1) : list.get(i + 1);
+            double ang;
+            if (curr.x != ref.x) {
+                ang = 0.0;
+            } else {
+                ang = -Math.PI / 2;
+            }
+            double cX = curr.x * CELL_SIZE + CELL_SIZE / 2.0;
+            double cY = curr.y * CELL_SIZE + CELL_SIZE / 2.0;
+            AffineTransform oldB = g2d.getTransform();
+            g2d.rotate(ang, cX, cY);
+            g2d.drawImage(bodyImg, curr.x * CELL_SIZE, curr.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, this);
+            g2d.setTransform(oldB);
         }
     }
 
