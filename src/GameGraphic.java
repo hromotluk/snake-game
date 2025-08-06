@@ -5,14 +5,14 @@ import java.awt.event.KeyListener;
 import java.util.Objects;
 
 public class GameGraphic extends JPanel implements KeyListener, Runnable {
-
-    private final Image snakeImg = new ImageIcon(
-            Objects.requireNonNull(getClass().getResource("/snake.png"))
-    ).getImage();
-
     private static final int CELL_SIZE = 20;
     private static final int COLS = 30;
     private static final int ROWS = 25;
+
+    private final Image headImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("/head.png"))).getImage();
+    private final Image bodyImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("/body.png"))).getImage();
+    private final Image ballImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("/ball.png"))).getImage();
+    private final Image obstacleImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("/obstacle.png"))).getImage();
 
     private GameLogic logic;
     private Thread loopThread;
@@ -82,26 +82,25 @@ public class GameGraphic extends JPanel implements KeyListener, Runnable {
     }
 
     private void drawSnake(Graphics g) {
-        for (Point p : logic.getSnake().getBody()) {
-            g.drawImage(snakeImg,
-                    p.x * CELL_SIZE,
-                    p.y * CELL_SIZE,
-                    CELL_SIZE,
-                    CELL_SIZE,
-                    this);
+        java.util.Iterator<Point> it = logic.getSnake().getBody().iterator();
+        if (it.hasNext()) {
+            Point head = it.next();
+            g.drawImage(headImg, head.x * CELL_SIZE, head.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, this);
+        }
+        while (it.hasNext()) {
+            Point p = it.next();
+            g.drawImage(bodyImg, p.x * CELL_SIZE, p.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, this);
         }
     }
 
     private void drawBall(Graphics g) {
-        g.setColor(Color.RED);
         Point p = logic.getBall().getPosition();
-        g.fillOval(p.x * CELL_SIZE, p.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        g.drawImage(ballImg, p.x * CELL_SIZE, p.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, this);
     }
 
     private void drawObstacles(Graphics g) {
-        g.setColor(Color.ORANGE);
         for (Point p : logic.getObstacles()) {
-            g.fillRect(p.x * CELL_SIZE, p.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            g.drawImage(obstacleImg, p.x * CELL_SIZE, p.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, this);
         }
     }
 
@@ -159,9 +158,7 @@ public class GameGraphic extends JPanel implements KeyListener, Runnable {
         start();
     }
 
-    @Override
-    public void keyReleased(KeyEvent e) {}
+    @Override public void keyReleased(KeyEvent e) {}
+    @Override public void keyTyped(KeyEvent e) {}
 
-    @Override
-    public void keyTyped(KeyEvent e) {}
 }
